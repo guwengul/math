@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Unit Conversion Quiz Game</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Baloo+2&display=swap');
+
+  body {
+    background: linear-gradient(135deg, #ffd6e8, #ffde7d);
+    font-family: 'Baloo 2', cursive, Arial, sans-serif;
+    margin: 0; padding: 0;
+    display: flex; flex-direction: column; align-items: center;
+    min-height: 100vh;
+  }
+
+  header {
+    text-align: center;
+    padding: 20px;
+    color: #8e3c70;
+    text-shadow: 1px 1px 3px #fff;
+  }
+
+  header h1 {
+    font-size: 3rem;
+    margin: 0 0 5px;
+  }
+
+  #game-container {
+    background: #fff;
+    border-radius: 15px;
+    box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+    width: 90vw;
+    max-width: 480px;
+    padding: 25px 20px 40px;
+    box-sizing: border-box;
+  }
+
+  #start-screen, #quiz-screen, #result-screen {
+    display: none;
+  }
+
+  #start-screen.active, #quiz-screen.active, #result-screen.active {
+    display: block;
+  }
+
+  label {
+    font-size: 1.4rem;
+    color: #a6418a;
+    display: block;
+    margin: 15px 0 10px;
+  }
+
+  select {
+    width: 100%;
+    padding: 12px;
+    border-radius: 10px;
+    border: 2px solid #a6418a;
+    font-size: 1.2rem;
+    background: #fff0f8;
+    color: #8e3c70;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.3s;
+  }
+
+  select:hover, select:focus {
+    border-color: #ff70b8;
+  }
+
+  button {
+    margin-top: 25px;
+    background: #f36da0;
+    color: white;
+    border: none;
+    border-radius: 15px;
+    padding: 14px 0;
+    font-size: 1.6rem;
+    cursor: pointer;
+    width: 100%;
+    box-shadow: 0 5px 12px rgba(243,109,160,0.6);
+    transition: background 0.3s;
+  }
+
+  button:hover {
+    background: #ff70b8;
+  }
+
+  #timer {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #d9306b;
+    text-align: center;
+    margin-bottom: 15px;
+  }
+
+  #question {
+    font-size: 1.7rem;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: #70345c;
+    min-height: 80px;
+  }
+
+  .answers {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+  }
+
+  .answer-btn {
+    background: #ffe2f0;
+    border: 3px solid #f36da0;
+    border-radius: 15px;
+    padding: 15px 10px;
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #8e3c70;
+    cursor: pointer;
+    transition: background 0.3s, border-color 0.3s;
+    user-select: none;
+  }
+
+  .answer-btn:hover {
+    background: #fcb1ce;
+    border-color: #ff70b8;
+  }
+
+  .answer-btn.correct {
+    background: #adebad;
+    border-color: #4caf50;
+    color: #2e7d32;
+  }
+
+  .answer-btn.wrong {
+    background: #f8a5a5;
+    border-color: #e53935;
+    color: #b71c1c;
+  }
+
+  #result-summary {
+    font-size: 1.4rem;
+    color: #70345c;
+    margin-bottom: 20px;
+  }
+
+  #answer-key {
+    max-height: 300px;
+    overflow-y: auto;
+    background: #fff5fb;
+    border-radius: 12px;
+    border: 2px solid #f36da0;
+    padding: 15px;
+    font-size: 1.2rem;
+    color: #70345c;
+    line-height: 1.4;
+  }
+
+  #answer-key .entry {
+    margin-bottom: 12px;
+  }
+
+  #answer-key .entry span {
+    display: block;
+  }
+
+  /* Scrollbar for answer key */
+  #answer-key::-webkit-scrollbar {
+    width: 8px;
+  }
+  #answer-key::-webkit-scrollbar-thumb {
+    background-color: #f36da0;
+    border-radius: 8px;
+  }
+  #answer-key::-webkit-scrollbar-track {
+    background: #fff0f8;
+  }
+
+  @media (max-width: 400px) {
+    #game-container {
+      padding: 20px 15px 35px;
+    }
+    header h1 {
+      font-size: 2.2rem;
+    }
+    #question {
+      font-size: 1.5rem;
+    }
+    .answer-btn {
+      font-size: 1.1rem;
+      padding: 12px 8px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Unit Conversion Quiz</h1>
+  <div>Fun and colorful conversions for kids! 🎉</div>
+</header>
+
+<div id="game-container">
+  <!-- Start Screen -->
+  <div id="start-screen" class="active">
+    <label for="test-type">Choose your test type:</label>
+    <select id="test-type">
+      <option value="" disabled selected>-- Select Test Type --</option>
+      <option value="weight">Weight (grams ↔ kilograms)</option>
+      <option value="length">Length (km, m, cm, mm)</option>
+      <option value="volume">Volume (liters ↔ milliliters)</option>
+      <option value="mixed">Mixed (all types)</option>
+    </select>
+    <button id="start-btn" disabled>Start Quiz</button>
+  </div>
+
+  <!-- Quiz Screen -->
+  <div id="quiz-screen">
+    <div id="timer">Time: 60s</div>
+    <div id="question">Question text here</div>
+    <div class="answers" id="answers-container"></div>
+  </div>
+
+  <!-- Result Screen -->
+  <div id="result-screen">
+    <div id="result-summary"></div>
+    <div id="answer-key"></div>
+    <button id="restart-btn">Play Again</button>
+  </div>
+</div>
+
+<script>
+(() => {
+  const startScreen = document.getElementById('start-screen');
+  const quizScreen = document.getElementById('quiz-screen');
+  const resultScreen = document.getElementById('result-screen');
+  const startBtn = document.getElementById('start-btn');
+  const restartBtn = document.getElementById('restart-btn');
+  const testTypeSelect = document.getElementById('test-type');
+  const timerDisplay = document.getElementById('timer');
+  const questionDisplay = document.getElementById('question');
+  const answersContainer = document.getElementById('answers-container');
+  const resultSummary = document.getElementById('result-summary');
+  const answerKeyContainer = document.getElementById('answer-key');
+
+  let timeLeft = 120;
+  let timerInterval = null;
+  let score = { correct: 0, wrong: 0, total: 0 };
+  let questionsAnswered = [];
+  let currentQuestion = null;
+  let testType = null;
+  let acceptingAnswers = false;
+
+  let audioCtx = null;
+
+  function playSound(type) {
+    if (!audioCtx) return; // AudioContext hazır değilse ses çalma
+
+    const osc = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+    osc.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+
+    if (type === 'success') {
+      osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.15);
+      gainNode.gain.setValueAtTime(0.25, audioCtx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
+      osc.type = 'triangle';
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.25);
+    } else if (type === 'fail') {
+      osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+      osc.frequency.linearRampToValueAtTime(350, audioCtx.currentTime + 0.15);
+      gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+      osc.type = 'sine';
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.2);
+    }
+  }
+
+  testTypeSelect.addEventListener('change', () => {
+    startBtn.disabled = !testTypeSelect.value;
+  });
+
+  startBtn.addEventListener('click', () => {
+    if (!testTypeSelect.value) return;
+    testType = testTypeSelect.value;
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    startGame();
+  });
+
+  restartBtn.addEventListener('click', () => {
+    resetGame();
+  });
+
+  function resetGame() {
+    timeLeft = 120;
+    score = { correct: 0, wrong: 0, total: 0 };
+    questionsAnswered = [];
+    currentQuestion = null;
+    testType = null;
+    acceptingAnswers = false;
+
+    if(timerInterval) {
+      clearInterval(timerInterval);
+      timerInterval = null;
+    }
+
+    startScreen.classList.add('active');
+    quizScreen.classList.remove('active');
+    resultScreen.classList.remove('active');
+
+    testTypeSelect.value = "";
+    startBtn.disabled = true;
+    timerDisplay.textContent = `Time: 120s`;
+    questionDisplay.textContent = 'Question text here';
+    answersContainer.innerHTML = '';
+  }
+
+  function startGame() {
+    startScreen.classList.remove('active');
+    quizScreen.classList.add('active');
+    resultScreen.classList.remove('active');
+
+    timerDisplay.textContent = `Time: 120s`;
+    score = { correct: 0, wrong: 0, total: 0 };
+    questionsAnswered = [];
+    timeLeft = 120;
+    acceptingAnswers = true;
+
+    nextQuestion();
+
+    if(timerInterval) clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+      timeLeft--;
+      timerDisplay.textContent = `Time: ${timeLeft}s`;
+      if (timeLeft <= 0) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+        acceptingAnswers = false;
+        endGame();
+      }
+    }, 1000);
+  }
+
+  function endGame() {
+    quizScreen.classList.remove('active');
+    resultScreen.classList.add('active');
+
+    resultSummary.innerHTML = `
+      <strong>Time's up!</strong><br>
+      Total Questions: ${score.total}<br>
+      Correct Answers: ${score.correct}<br>
+      Wrong Answers: ${score.wrong}
+    `;
+
+    answerKeyContainer.innerHTML = '';
+    questionsAnswered.forEach((q, i) => {
+      const userCorrect = q.userAnswer === q.correctAnswer;
+      const entryDiv = document.createElement('div');
+      entryDiv.classList.add('entry');
+      entryDiv.style.color = userCorrect ? '#2e7d32' : '#b71c1c';
+
+      entryDiv.innerHTML = `
+        <span><strong>Q${i+1}:</strong> ${q.questionText}</span>
+        <span>Your answer: ${formatNumberForDisplay(q.userAnswer)} ${userCorrect ? '✅' : '❌'}</span>
+        <span>Correct answer: ${formatNumberForDisplay(q.correctAnswer)}</span>
+      `;
+      answerKeyContainer.appendChild(entryDiv);
+    });
+  }
+
+  function randInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  function niceNumber(num) {
+    return +parseFloat(num.toFixed(2));
+  }
+
+  function generateChoices(correctAnswer) {
+    let choices = new Set();
+    choices.add(correctAnswer);
+
+    const variations = [
+      correctAnswer * 10,
+      correctAnswer / 10,
+      correctAnswer * 5,
+      correctAnswer / 5
+    ];
+
+    for (const v of variations) {
+      if (v > 0 && v !== correctAnswer) {
+        if (Number.isInteger(correctAnswer)) {
+          choices.add(Math.round(v));
+        } else {
+          choices.add(+v.toFixed(2));
+        }
+      }
+      if (choices.size >= 4) break;
+    }
+
+    while (choices.size < 4) {
+      let randomOffset = (Math.random() - 0.5) * 0.2 * correctAnswer;
+      let val = correctAnswer + randomOffset;
+      if (val > 0) {
+        val = Number.isInteger(correctAnswer) ? Math.round(val) : +val.toFixed(2);
+        choices.add(val);
+      }
+    }
+
+    const arr = Array.from(choices);
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  // Binlik ayırıcı ile sayıları gösteren fonksiyon
+  function formatNumberForDisplay(num) {
+    if (Number.isInteger(num)) {
+      return num.toLocaleString();
+    } else {
+      const parts = num.toFixed(2).split('.');
+      return Number(parts[0]).toLocaleString() + '.' + parts[1];
+    }
+  }
+
+  function generateWeightQuestion() {
+    const toKg = Math.random() < 0.5;
+
+    if (toKg) {
+      let grams = randInt(100, 10000);
+      if (Math.random() < 0.4) grams = +(grams / 10).toFixed(1) * 10;
+      const questionText = `Convert ${formatNumberForDisplay(grams)} grams to kilograms.`;
+      const correctAnswer = niceNumber(grams / 1000);
+      const choices = generateChoices(correctAnswer);
+      return { questionText, correctAnswer, choices };
+    } else {
+      let kg = +(Math.random() * 9.99 + 0.1).toFixed(2);
+      const questionText = `Convert ${formatNumberForDisplay(kg)} kilograms to grams.`;
+      const correctAnswer = niceNumber(kg * 1000);
+      const choices = generateChoices(correctAnswer);
+      return { questionText, correctAnswer, choices };
+    }
+  }
+
+  function generateLengthQuestion() {
+    const conversions = [
+      { fromUnit: 'kilometers', toUnit: 'meters', factor: 1000 },
+      { fromUnit: 'meters', toUnit: 'centimeters', factor: 100 },
+      { fromUnit: 'centimeters', toUnit: 'millimeters', factor: 10 },
+      { fromUnit: 'meters', toUnit: 'kilometers', factor: 1/1000 },
+      { fromUnit: 'kilometers', toUnit: 'centimeters', factor: 100000 },
+      { fromUnit: 'kilometers', toUnit: 'millimeters', factor: 1e6 },
+      { fromUnit: 'centimeters', toUnit: 'meters', factor: 1/100 },
+      { fromUnit: 'millimeters', toUnit: 'centimeters', factor: 1/10 }
+    ];
+
+    const conv = conversions[randInt(0, conversions.length -1)];
+
+    let value;
+    switch (conv.fromUnit) {
+      case 'kilometers':
+        value = +(Math.random() * 9.99 + 0.1).toFixed(2);
+        break;
+      case 'meters':
+        value = randInt(50, 10000);
+        break;
+      case 'centimeters':
+        value = randInt(100, 50000);
+        break;
+      case 'millimeters':
+        value = randInt(1000, 100000);
+        break;
+    }
+
+    const questionText = `Convert ${formatNumberForDisplay(value)} ${conv.fromUnit} to ${conv.toUnit}.`;
+    const correctAnswerRaw = value * conv.factor;
+    const correctAnswer = niceNumber(correctAnswerRaw);
+    const choices = generateChoices(correctAnswer);
+
+    return { questionText, correctAnswer, choices };
+  }
+
+  function generateVolumeQuestion() {
+    const toL = Math.random() < 0.5;
+
+    if (toL) {
+      let ml = randInt(100, 10000);
+      if (Math.random() < 0.3) ml = +(ml / 10).toFixed(1) * 10;
+      const questionText = `Convert ${formatNumberForDisplay(ml)} milliliters to liters.`;
+      const correctAnswer = niceNumber(ml / 1000);
+      const choices = generateChoices(correctAnswer);
+      return { questionText, correctAnswer, choices };
+    } else {
+      let l = +(Math.random() * 9.99 + 0.1).toFixed(2);
+      const questionText = `Convert ${formatNumberForDisplay(l)} liters to milliliters.`;
+      const correctAnswer = niceNumber(l * 1000);
+      const choices = generateChoices(correctAnswer);
+      return { questionText, correctAnswer, choices };
+    }
+  }
+
+  function generateMixedQuestion() {
+    const funcs = [
+      generateWeightQuestion,
+      generateLengthQuestion,
+      generateVolumeQuestion
+    ];
+    return funcs[randInt(0, funcs.length -1)]();
+  }
+
+  function displayQuestion(q) {
+    questionDisplay.textContent = q.questionText;
+    answersContainer.innerHTML = '';
+
+    q.choices.forEach(choice => {
+      const btn = document.createElement('button');
+      btn.classList.add('answer-btn');
+      btn.setAttribute('data-value', choice);
+      btn.textContent = formatNumberForDisplay(choice);
+      btn.disabled = false;
+      btn.addEventListener('click', onAnswerSelected);
+      answersContainer.appendChild(btn);
+    });
+  }
+
+  function onAnswerSelected(e) {
+    if (!acceptingAnswers) return;
+    acceptingAnswers = false;
+
+    const selectedBtn = e.target;
+    const selectedValueRaw = selectedBtn.getAttribute('data-value');
+    const selectedValue = isNaN(selectedValueRaw) ? selectedValueRaw : Number(selectedValueRaw);
+
+    Array.from(answersContainer.children).forEach(btn => btn.disabled = true);
+
+    const correct = selectedValue === currentQuestion.correctAnswer;
+
+    if (correct) {
+      selectedBtn.classList.add('correct');
+      playSound('success');
+      score.correct++;
+    } else {
+      selectedBtn.classList.add('wrong');
+      playSound('fail');
+      // Doğru cevabı işaretle
+      Array.from(answersContainer.children).forEach(btn => {
+        if (+btn.getAttribute('data-value') === currentQuestion.correctAnswer) {
+          btn.classList.add('correct');
+        }
+      });
+      score.wrong++;
+    }
+    score.total++;
+
+    questionsAnswered.push({
+      questionText: currentQuestion.questionText,
+      correctAnswer: currentQuestion.correctAnswer,
+      userAnswer: selectedValue
+    });
+
+    setTimeout(() => {
+      if (timeLeft <= 0) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+        endGame();
+      } else {
+        acceptingAnswers = true;
+        nextQuestion();
+      }
+    }, 700);
+  }
+
+  function nextQuestion() {
+    switch(testType) {
+      case 'weight':
+        currentQuestion = generateWeightQuestion();
+        break;
+      case 'length':
+        currentQuestion = generateLengthQuestion();
+        break;
+      case 'volume':
+        currentQuestion = generateVolumeQuestion();
+        break;
+      case 'mixed':
+        currentQuestion = generateMixedQuestion();
+        break;
+      default:
+        currentQuestion = generateMixedQuestion();
+    }
+
+    displayQuestion(currentQuestion);
+  }
+
+  resetGame();
+})();
+</script>
+
+</body>
+</html>
